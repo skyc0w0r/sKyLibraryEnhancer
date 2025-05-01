@@ -1,0 +1,17 @@
+---
+name: "sKyLibraryEnhancer"
+guid: "4b23ad66-7c21-4f2a-ab1c-4adea7fcb382"
+version: "1.0.0.0"
+targetAbi: "10.9.0.0"
+framework: "net8.0"
+overview: "Fix for Sub and Dub folders"
+description: >
+  This plugin fixes an issue with separate sub and dub folders per tv show.
+  Reason for this plugin to exist is: anime TV seasons put external subs and dubs in some subfolders,
+  but JellyFin only searches in base directory.
+category: "General"
+owner: "sKycoLor"
+artifacts:
+- "sKyLibraryEnhancer.dll"
+changelog: >
+  changelog
