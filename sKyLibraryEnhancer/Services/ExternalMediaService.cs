@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Controller.Persistence;
@@ -77,22 +78,29 @@ namespace SkyLibraryEnhancer.Services
                 return;
             }
 
+            // skip seasons as they do not contain children
             if (e.Item.LocationType == MediaBrowser.Model.Entities.LocationType.Virtual)
             {
                 return;
             }
 
-            Guid? id = e.Item switch
+            if (e.Item is Video v)
             {
-                Video v => v.Id,
-                _ => null,
-            };
-
-            if (id.HasValue)
-            {
-                _videosToProcess.Add(id.Value);
-                StartTimer(30);
+                _videosToProcess.Add(v.Id);
             }
+            else if (e.Item is Series s)
+            {
+                foreach (var child in s.Children)
+                {
+                    _videosToProcess.Add(child.Id);
+                }
+            }
+            else
+            {
+                return;
+            }
+
+            StartTimer(30);
         }
 
         private void OnLibraryRefresh(object? sender, TaskCompletionEventArgs e)
@@ -156,8 +164,8 @@ namespace SkyLibraryEnhancer.Services
                     _videosToProcess.Clear();
                     _runAgain = false;
 
-                    var analyzer = new DIscoveryWorker(
-                        loggerFactory.CreateLogger<DIscoveryWorker>(),
+                    var analyzer = new DiscoveryWorker(
+                        loggerFactory.CreateLogger<DiscoveryWorker>(),
                         libraryManager,
                         directoryService,
                         itemRepository,

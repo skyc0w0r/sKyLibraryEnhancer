@@ -21,7 +21,7 @@ using Microsoft.Extensions.Logging;
 
 namespace SkyLibraryEnhancer.Classes
 {
-    internal class DIscoveryWorker(
+    internal class DiscoveryWorker(
         ILogger logger,
         ILibraryManager libraryManager,
         IDirectoryService directoryService,
@@ -45,6 +45,11 @@ namespace SkyLibraryEnhancer.Classes
             {
                 try
                 {
+                    if (videoId == Guid.Empty)
+                    {
+                        return;
+                    }
+
                     var video = libraryManager.GetItemById<Video>(videoId);
                     if (video is null)
                     {
@@ -198,6 +203,10 @@ namespace SkyLibraryEnhancer.Classes
                                 }
                             }
                         }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
                     }
                     catch (Exception ex)
                     {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MediaBrowser.Controller.Entities;
@@ -13,19 +14,22 @@ namespace SkyLibraryEnhancer
         ILogger<SubFolderIgnoreRule> logger,
         IDirectoryService directoryService) : IResolverIgnoreRule
     {
-        private IEnumerable<string> SubExtentions => Plugin.Instance?.Configuration.IgnoreExtentionsList ?? [];
+        private IEnumerable<string> IgnoreExtentions => Plugin.Instance?.Configuration.IgnoreExtentionsList ?? [];
 
         private IEnumerable<string> IgnoreNames => Plugin.Instance?.Configuration.IgnoreNamesList ?? [];
 
         public bool ShouldIgnore(FileSystemMetadata fileInfo, BaseItem? parent)
         {
+            bool MatchExt(string ext)
+                => IgnoreExtentions.Any(c => c.Equals(ext, StringComparison.OrdinalIgnoreCase));
+
             if (parent is not null && parent is Series)
             {
                 if (fileInfo.IsDirectory)
                 {
                     var files = directoryService.GetFiles(fileInfo.FullName);
                     var dirs = directoryService.GetDirectories(fileInfo.FullName);
-                    var allFilesAreSubtitles = files.All(c => SubExtentions.Any(d => d == c.Extension[1..]));
+                    var allFilesAreSubtitles = files.All(c => MatchExt(c.Extension[1..]));
 
                     if (allFilesAreSubtitles && !dirs.Any())
                     {
@@ -34,7 +38,7 @@ namespace SkyLibraryEnhancer
                     }
 
                     var nestedFiles = dirs.Select(c => directoryService.GetFiles(c.FullName)).SelectMany(c => c).ToList();
-                    var allNestedFilesAreSubtitles = nestedFiles.Any() && nestedFiles.All(c => SubExtentions.Any(d => d == c.Extension[1..]));
+                    var allNestedFilesAreSubtitles = nestedFiles.Any() && nestedFiles.All(c => MatchExt(c.Extension[1..]));
 
                     if (allNestedFilesAreSubtitles)
                     {
@@ -44,7 +48,7 @@ namespace SkyLibraryEnhancer
 
                     foreach (var ignoreName in IgnoreNames)
                     {
-                        if (fileInfo.Name.Contains(ignoreName, System.StringComparison.OrdinalIgnoreCase))
+                        if (fileInfo.Name.Contains(ignoreName, StringComparison.OrdinalIgnoreCase))
                         {
                             logger.LogInformation("Ignoring directory '{FolderName}' for '{SeriesName}' matched '{Pattern}'", fileInfo.Name, parent.Name, ignoreName);
                             return true;
