@@ -26,7 +26,7 @@ namespace SkyLibraryEnhancer.Services
         ITaskManager taskManager,
         ILoggerFactory loggerFactory,
         IDirectoryService directoryService,
-        IItemRepository itemRepository,
+        IMediaStreamRepository mediaStreamRepository,
         IMediaEncoder mediaEncoder,
         ILocalizationManager localizationManager,
         NamingOptions namingOptions) : IHostedService, IDisposable
@@ -168,7 +168,7 @@ namespace SkyLibraryEnhancer.Services
                         loggerFactory.CreateLogger<DiscoveryWorker>(),
                         libraryManager,
                         directoryService,
-                        itemRepository,
+                        mediaStreamRepository,
                         mediaEncoder,
                         localizationManager,
                         namingOptions);

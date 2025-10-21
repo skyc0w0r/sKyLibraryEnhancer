@@ -25,7 +25,7 @@ namespace SkyLibraryEnhancer.Classes
         ILogger logger,
         ILibraryManager libraryManager,
         IDirectoryService directoryService,
-        IItemRepository itemRepository,
+        IMediaStreamRepository mediaStreamRepository,
         IMediaEncoder mediaEncoder,
         ILocalizationManager localizationManager,
         NamingOptions namingOptions)
@@ -125,9 +125,9 @@ namespace SkyLibraryEnhancer.Classes
                 stream.Index = startIndex++;
             }
 
-            originalStreams.AddRange(streams);
+            originalStreams = [.. originalStreams, .. streams];
 
-            itemRepository.SaveMediaStreams(video.Id, originalStreams, cancellationToken);
+            mediaStreamRepository.SaveMediaStreams(video.Id, originalStreams, cancellationToken);
             logger.LogInformation("Add external audio/subs ({Count}) for '{Name}'", streams.Count, video.Name);
         }
 
