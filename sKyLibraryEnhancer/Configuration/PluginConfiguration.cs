@@ -26,5 +26,16 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public string IgnoreNames { get; set; } = "subs, sound";
 
-    public IReadOnlyCollection<string> IgnoreNamesList => [.. IgnoreNames.Split(',').Select(c => c.Trim())];
+    public IReadOnlyCollection<(string Name, bool Exact)> IgnoreNamesList => [..IgnoreNames
+        .Split(',')
+        .Select(c => c.Trim())
+        .Select(c =>
+        {
+            if (c.StartsWith('^') && c.EndsWith('$'))
+            {
+                return (c[1..^1], true);
+            }
+
+            return (c, false);
+        })];
 }
