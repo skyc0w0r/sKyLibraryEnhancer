@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
@@ -90,9 +91,27 @@ namespace SkyLibraryEnhancer.Services
             }
             else if (e.Item is Series s)
             {
-                foreach (var child in s.Children)
+                if (e.Parent is not Folder folder)
                 {
-                    _videosToProcess.Add(child.Id);
+                    return;
+                }
+
+                foreach (var sameNamedItem in folder.Children.Where(c => c.Name == e.Item.Name))
+                {
+                    if (sameNamedItem is not Series sameNamedSeries)
+                    {
+                        continue;
+                    }
+
+                    foreach (var seriesChildren in sameNamedSeries.Children)
+                    {
+                        if (seriesChildren is not Video seriesVideo)
+                        {
+                            continue;
+                        }
+
+                        _videosToProcess.Add(seriesChildren.Id);
+                    }
                 }
             }
             else
@@ -159,7 +178,7 @@ namespace SkyLibraryEnhancer.Services
             {
                 using (_cancellationTokenSource = new CancellationTokenSource())
                 {
-                    logger.LogInformation("Starting external media discovery...");
+                    logger.LogInformation("Starting external media discovery for {Count} items...", _videosToProcess.Count);
                     var ids = new HashSet<Guid>(_videosToProcess);
                     _videosToProcess.Clear();
                     _runAgain = false;

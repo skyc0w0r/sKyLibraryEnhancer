@@ -41,7 +41,12 @@ namespace SkyLibraryEnhancer.Classes
                 MaxDegreeOfParallelism = 4,
                 CancellationToken = cancellationToken,
             };
+#if DEBUG
+            var token = cancellationToken;
+            foreach (var videoId in videos)
+#else
             await Parallel.ForEachAsync(videos, options, async (videoId, token) =>
+#endif
             {
                 try
                 {
@@ -69,7 +74,11 @@ namespace SkyLibraryEnhancer.Classes
                     logger.LogInformation("Discovery was canceled");
                     isCanceled = true;
                 }
-            }).ConfigureAwait(false);
+#if DEBUG
+            }
+#else
+        }).ConfigureAwait(false);
+#endif
 
             if (!isCanceled)
             {
@@ -112,9 +121,14 @@ namespace SkyLibraryEnhancer.Classes
 
             var originalStreams = video.GetMediaStreams();
 
-            streams = streams.Where(c => !originalStreams.Any(d => c.Path == d.Path)).ToList();
-            if (!streams.Any())
+            streams = streams
+                .Where(c => !originalStreams.Any(d => c.Path == d.Path))
+                .ToList();
+
+            if (streams.Count == 0)
             {
+                var externalCount = originalStreams.Count(c => c.IsExternal);
+                logger.LogInformation("Item [s{Season}e{Episode}]'{Name}' already contains external audio/subs ({Count})", video.ParentIndexNumber, video.IndexNumber, video.Name, externalCount);
                 return;
             }
 
@@ -128,8 +142,10 @@ namespace SkyLibraryEnhancer.Classes
             originalStreams = [.. originalStreams, .. streams];
 
             mediaStreamRepository.SaveMediaStreams(video.Id, originalStreams, cancellationToken);
-            logger.LogInformation("Add external audio/subs ({Count}) for '{Name}'", streams.Count, video.Name);
+            logger.LogInformation("Item [s{Season}e{Episode}]'{Name}' extended with external audio/subs ({Count})", video.ParentIndexNumber, video.IndexNumber, video.Name, streams.Count);
         }
+
+        // ref: MediaBrowser.Providers.MediaInfo.MediaInfoResolver::GetExternalFiles()
 
         private IReadOnlyList<ExternalPathParserResult> GetExternalFiles(Video video, string folder, IEnumerable<ExternalPathParser> externalPathParsers)
         {

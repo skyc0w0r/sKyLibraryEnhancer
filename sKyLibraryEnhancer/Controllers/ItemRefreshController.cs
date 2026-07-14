@@ -81,7 +81,7 @@ public class ItemRefreshController : ControllerBase
             ForceSave = true,
             IsAutomated = false,
             RemoveOldMetadata = false,
-            RegenerateTrickplay = false
+            RegenerateTrickplay = false,
         };
 
         _logger.LogInformation("Queued refresh metadata task for [{Index}]{Name}", item.IndexNumber, item.Name);
